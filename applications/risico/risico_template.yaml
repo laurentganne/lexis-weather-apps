@@ -1,0 +1,219 @@
+tosca_definitions_version: alien_dsl_2_0_0
+
+metadata:
+  template_name: Risico
+  template_version: 0.1.0-SNAPSHOT
+  template_author: lexis
+
+description: ""
+
+imports:
+  - yorc-types:1.1.0
+  - tosca-normative-types:1.0.0-ALIEN20
+  - docker-types:2.2.0-SM10
+  - alien-base-types:2.2.0-SM10
+  - heappe-types:0.1.0
+  - wps-types:0.1.0
+  - org.ystia.docker.containers.docker.generic:2.2.0-SNAPSHOT
+  - org.ystia.docker.ansible:2.2.0-SNAPSHOT
+
+topology_template:
+  input_artifacts:
+    zip_dataset:
+        type: tosca.artifacts.File
+  node_templates:
+    PublicNet:
+      type: tosca.nodes.Network
+      properties:
+        ip_version: 4
+    VirtualMachine:
+      type: tosca.nodes.Compute
+      requirements:
+        - networkPublicNetConnection:
+            type_requirement: network
+            node: PublicNet
+            capability: tosca.capabilities.Connectivity
+            relationship: tosca.relationships.Network
+      capabilities:
+        scalable:
+          properties:
+            min_instances: 1
+            max_instances: 1
+            default_instances: 1
+        endpoint:
+          properties:
+            secure: true
+            protocol: tcp
+            network_name: PRIVATE
+            initiator: source
+    Docker:
+      type: org.ystia.docker.ansible.nodes.Docker
+      properties:
+        docker_version: ""
+      requirements:
+        - hostedOnVirtualMachineHost:
+            type_requirement: host
+            node: VirtualMachine
+            capability: tosca.capabilities.Container
+            relationship: tosca.relationships.HostedOn
+    WPS_GFS:
+      type: org.ystia.docker.containers.docker.generic.nodes.GenericContainer
+      properties:
+        auto_remove: false
+        cleanup: false
+        detach: true
+        image: "laurentg/wps.gfs"
+        keep_volumes: true
+        restart_policy: no
+        cpu_share: 1.0
+        mem_share: "128 MB"
+        volumes:
+            - GFS:/input
+            - GFS_OUTPUT:/output
+            - GEOG:/geogrid
+      requirements:
+        - hostedOnContainerRuntimeDockerHost:
+            type_requirement: host
+            node: Docker
+            capability: org.alien4cloud.extended.container.capabilities.ApplicationHost
+            relationship: org.alien4cloud.extended.container.relationships.HostedOnContainerRuntime
+      capabilities:
+        scalable:
+          properties:
+            min_instances: 1
+            max_instances: 1
+            default_instances: 1
+    GFSData:
+      type: org.lexis.nodes.GFSData
+      properties:
+        left_longitude: "-19.0"
+        right_longitude: "48.0"
+        top_latitude: "64.0"
+        bottom_latitude: "24.0"
+        output_directory: "GFS"
+      requirements:
+        - hostedOnVirtualMachineHost:
+            type_requirement: host
+            node: VirtualMachine
+            capability: tosca.capabilities.Container
+            relationship: tosca.relationships.HostedOn
+    GEOGData:
+      type: org.lexis.nodes.GEOGData
+      output_directory: "GEOG"
+      requirements:
+        - hostedOnVirtualMachineHost:
+            type_requirement: host
+            node: VirtualMachine
+            capability: tosca.capabilities.Container
+            relationship: tosca.relationships.HostedOn
+
+  workflows:
+    install:
+      steps:
+        Network_install:
+          target: PublicNet
+          activities:
+            - delegate: install
+    uninstall:
+      steps:
+        Docker_stop:
+          target: Docker
+          activities:
+            - call_operation: Standard.stop
+          on_success:
+            - Docker_deleted
+        Docker_deleted:
+          target: Docker
+          activities:
+            - set_state: deleted
+          on_success:
+            - Compute_uninstall
+        Compute_uninstall:
+          target: VirtualMachine
+          activities:
+            - delegate: uninstall
+          on_success:
+            - Network_uninstall
+        Network_uninstall:
+          target: PublicNet
+          activities:
+            - delegate: uninstall
+          on_success:
+            - Results_delete
+    start:
+    stop:
+    run:
+      steps:
+        Compute_install:
+          target: VirtualMachine
+          activities:
+            - delegate: install
+          on_success:
+            - GFSData_download
+            - GEOGData_download
+        GFSData_download:
+          target: GFSData
+          activities:
+            - call_operation: custom.download
+          on_success:
+            - Docker_create
+        GFSData_done:
+          target: GFSData
+          activities:
+            - set_state: started
+          on_success:
+            - Docker_create
+        GEOGData_download:
+          target: GEOGData
+          activities:
+            - call_operation: custom.download
+          on_success:
+            - GEOGData_done
+        GEOGData_done:
+          target: GEOGData
+          activities:
+            - set_state: started
+          on_success:
+            - Docker_create
+        Docker_create:
+          target: Docker
+          activities:
+            - call_operation: Standard.create
+          on_success:
+            - Docker_configure
+        Docker_configure:
+          target: Docker
+          activities:
+            - call_operation: Standard.configure
+          on_success:
+            - Docker_start
+        Docker_start:
+          target: Docker
+          activities:
+            - call_operation: Standard.start
+          on_success:
+            - Docker_started
+        Docker_started:
+          target: Docker
+          activities:
+            - set_state: started
+          on_success:
+            - WPS_GFS_create
+            - CopyResults_copy
+        WPS_GFS_create:
+          target: WPS_GFS
+          activities:
+            - call_operation: Standard.create
+          on_success:
+            - WPS_GFS_start
+        WPS_GFS_start:
+          target: WPS_GFS
+          activities:
+            - call_operation: Standard.start
+          on_success:
+            - WPS_GFS_started
+        WPS_GFS_started:
+          target: WPS_GFS
+          activities:
+            - set_state: started
+    cancel:

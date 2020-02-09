@@ -1,0 +1,13 @@
+- name: Get GEOG data
+  hosts: all
+  strategy: free
+  tasks:
+    - name: Create output directoriy
+      file:
+        path: "{{ OUTPUT_DIRECTORY }}"
+        state: directory    
+    - name: Download GEOG data
+      get_url:
+        url: "https://www2.mmm.ucar.edu/wrf/src/wps_files/geog_high_res_mandatory.tar.gz"
+        dest: "{{ OUTPUT_DIRECTORY }}"
+        mode: 0755
