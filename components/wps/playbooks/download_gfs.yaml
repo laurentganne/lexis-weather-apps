@@ -1,15 +1,25 @@
+- name: Prequisites
+  hosts: all
+  strategy: free
+  become: true
+  become_method: sudo
+  tasks:
+    - name: Create output directory {{ OUTPUT_DIRECTORY }}
+      file:
+        path: "{{ OUTPUT_DIRECTORY }}"
+        state: directory
+        recurse: yes
+        mode: 0777
+    - name: Temporary step creating /wps_data/output
+      file:
+        path: /wps_data/output
+        state: directory
+        recurse: yes
+        mode: 0777
 - name: Get GFS data
   hosts: all
   strategy: free
   tasks:
-    - name: Create output directory
-      file:
-        path: "{{ OUTPUT_DIRECTORY }}"
-        state: directory    
-    - name: Temporary step
-      file:
-        path: "OUTPUT"
-        state: directory    
     - set_fact:
         today: "{{ lookup('pipe', 'date +%Y%M%d') }}"
     - name: Download GFS analysis of initial atmospheric conditions file

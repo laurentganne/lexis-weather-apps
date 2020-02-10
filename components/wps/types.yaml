@@ -26,7 +26,7 @@ node_types:
         description: Bottom latitude
       output_directory:
         type: string
-        description: Directory where to store donwloaded data
+        description: Absolute path to directory where to store donwloaded data
     interfaces:
       Standard:
         create:
@@ -45,11 +45,12 @@ node_types:
     properties:
      output_directory:
         type: string
-        description: Directory where to store donwloaded data
+        description: Absolute path to directory where to store donwloaded data
     interfaces:
       Standard:
         create:
           implementation: playbooks/noop.yaml
+      custom:
         download:
           inputs:
             OUTPUT_DIRECTORY: {get_property: [SELF, output_directory]}

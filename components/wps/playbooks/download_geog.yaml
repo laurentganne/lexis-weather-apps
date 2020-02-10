@@ -1,4 +1,4 @@
-- name: Install prequisites
+- name: Prequisites
   hosts: all
   strategy: free
   become: true
@@ -29,6 +29,13 @@
         state: present
         update_cache: yes
       when: ansible_os_family == 'Debian'
+    - name: Create output directory
+      file:
+        path: "{{ OUTPUT_DIRECTORY }}"
+        state: directory
+        recurse: yes
+        mode: 0777
+
 - name: Get GEOG data
   hosts: all
   strategy: free
@@ -36,17 +43,15 @@
     - name: Download GEOG data
       get_url:
         url: "https://www2.mmm.ucar.edu/wrf/src/wps_files/geog_high_res_mandatory.tar.gz"
-        dest: "{{ansible_env['HOME']}}"
+        dest: "{{ OUTPUT_DIRECTORY }}"
         mode: 0755
     - name: Extract archive
       # Using absolute path to avoid an ansible issue with gtar and relative paths
       unarchive:
-        src: "{{ansible_env['HOME']}}/geog_high_res_mandatory.tar.gz"
-        dest: "{{ansible_env['HOME']}}"
+        src: "{{ OUTPUT_DIRECTORY }}/geog_high_res_mandatory.tar.gz"
+        dest: "{{ OUTPUT_DIRECTORY }}"
         remote_src: yes
     - name: Remove archive
       file:
-        path: "{{ansible_env['HOME']}}/geog_high_res_mandatory.tar.gz"
+        path: "{{ OUTPUT_DIRECTORY }}/geog_high_res_mandatory.tar.gz"
         state: absent
-    - name: Move foo to bar
-      command: mv "{{ansible_env['HOME']}}/WPS_GEOG" "{{ansible_env['HOME']}}/{{ OUTPUT_DIRECTORY }}"

@@ -65,9 +65,9 @@ topology_template:
         cpu_share: 1.0
         mem_share: "128 MB"
         volumes:
-            - GFS:/input
-            - OUTPUT:/output
-            - GEOG:/geogrid
+            - /wps_data/gfs:/input
+            - /wps_data/output:/output
+            - /wps_data/geog/WPS_GEOG:/geogrid
         docker_env_vars: 
           START_DATE: "2020020712"
           END_DATE: "2020020715"
@@ -90,7 +90,7 @@ topology_template:
         right_longitude: "48.0"
         top_latitude: "64.0"
         bottom_latitude: "24.0"
-        output_directory: "GFS"
+        output_directory: "/wps_data/gfs"
       requirements:
         - hostedOnVirtualMachineHost:
             type_requirement: host
@@ -100,7 +100,7 @@ topology_template:
     GEOGData:
       type: org.lexis.nodes.GEOGData
       properties:
-        output_directory: "GEOG"
+        output_directory: "/wps_data/geog"
       requirements:
         - hostedOnVirtualMachineHost:
             type_requirement: host
