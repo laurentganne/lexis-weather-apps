@@ -18,12 +18,12 @@ node_types:
       right_longitude:
         type: string
         description: Right longitude
-      left_latitude:
+      top_latitude:
         type: string
-        description: Left latitude
-      right_latitude:
+        description: Top latitude
+      bottom_latitude:
         type: string
-        description: Right latitude
+        description: Bottom latitude
       output_directory:
         type: string
         description: Directory where to store donwloaded data
@@ -31,6 +31,7 @@ node_types:
       Standard:
         create:
           implementation: playbooks/noop.yaml
+      custom:
         download:
           inputs:
             LEFT_LONGITUDE: {get_property: [SELF, left_longitude]}
