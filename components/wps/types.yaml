@@ -40,6 +40,8 @@ node_types:
             BOTTOM_LATITUDE: {get_property: [SELF, bottom_latitude]}
             OUTPUT_DIRECTORY: {get_property: [SELF, output_directory]}
           implementation: playbooks/download_gfs.yaml
+    tags:
+      icon: /images/GFS.png
   org.lexis.nodes.GEOGData:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
@@ -55,3 +57,5 @@ node_types:
           inputs:
             OUTPUT_DIRECTORY: {get_property: [SELF, output_directory]}
           implementation: playbooks/download_geog.yaml
+    tags:
+      icon: /images/GEOG.png

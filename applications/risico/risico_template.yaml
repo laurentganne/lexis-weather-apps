@@ -69,8 +69,8 @@ topology_template:
             - /wps_data/output:/output
             - /wps_data/geog/WPS_GEOG:/geogrid
         docker_env_vars: 
-          START_DATE: "2020020712"
-          END_DATE: "2020020715"
+          WPS_START_DATE: "2020020712"
+          WPS_END_DATE: "2020020715"
       requirements:
         - hostedOnContainerRuntimeDockerHost:
             type_requirement: host
