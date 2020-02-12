@@ -4,8 +4,8 @@ First draft for RISICO application template implementing for now only the pre-pr
 The graphical view of the application template shows the following components hosted
 on a compute instance:
 
-* GEOGData component, responsible for download geographical files from a web site
-* GFSData component, responsible for download Global Forecast System files from a web site
+* GEOGData component, responsible for the download of geographical files from a web site
+* GFSData component, responsible for the download of Global Forecast System files from a web site
 * Docker, to run container
 * WFS_GFS container performing the pre-processing (see [CIMA WPS model](https://github.com/cima-lexis/wps.docker))
 
